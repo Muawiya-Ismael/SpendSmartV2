@@ -1,17 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SpendSmartV2.Models;
 
-namespace SpendSmartV2.Models
+namespace SpendSmartV2.Data
 {
     public class SpendSmartDbContext: IdentityDbContext
-    {
-        private readonly DbContextOptions _options;
-        public DbSet<Expenses> Expenses { get; set; }
-
+    {  
         public SpendSmartDbContext(DbContextOptions options) : base(options)
         {
-            _options = options;
         }
+
+        public DbSet<Expenses> Expenses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,6 +1,8 @@
-using SpendSmartV2.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SpendSmartV2.Interface;
+using SpendSmartV2.Repository;
+using SpendSmartV2.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,8 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 
 builder.Services.AddDbContext<SpendSmartDbContext>(options =>options.UseSqlServer(connectionString));
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<SpendSmartDbContext>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 
 var app = builder.Build();
 
