@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SpendSmartV2.Data;
 using SpendSmartV2.Interface;
 using SpendSmartV2.Models;
+using SpendSmartV2.Services.Expenses;
 
 namespace SpendSmartV2.Controllers
 {
@@ -14,15 +15,17 @@ namespace SpendSmartV2.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SpendSmartDbContext _context;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IExpensesServices _expensesServices;
 
         public List<Expenses> expensesList = new List<Expenses>();
 
-        public ExpensesController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager, SpendSmartDbContext context, IUnitOfWork unitOfWork)
+        public ExpensesController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager, SpendSmartDbContext context, IUnitOfWork unitOfWork, IExpensesServices expensesServices)
         {
             _logger = logger;
             _userManager = userManager;
             _context = context;
             _unitOfWork = unitOfWork;  
+            _expensesServices = expensesServices;
         }
 
         [Authorize]
@@ -36,7 +39,8 @@ namespace SpendSmartV2.Controllers
             }
 
             //var allExpenses = await _context.Expenses.Where(e => e.UserId == user.Id).ToListAsync();
-            var allExpenses = await _unitOfWork.expensesRepository.GetAllAsync(user.Id);
+            //var allExpenses = await _unitOfWork.expensesRepository.GetAllAsync(user.Id);
+            var allExpenses = await _expensesServices.GetAllExpenses(user.Id);
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
@@ -80,12 +84,8 @@ namespace SpendSmartV2.Controllers
                 else
                 {
                     //var expenseInDb = await _context.Expenses.SingleOrDefaultAsync(e => e.UserId == user.Id && e.Id == id);
-                    var expenseInDb = await _unitOfWork.expensesRepository.GetAsync(user.Id, id);
-
-                    if (expenseInDb == null && id != null)
-                    {
-                        return NotFound();
-                    }
+                    //var expenseInDb = await _unitOfWork.expensesRepository.GetAsync(user.Id, id);
+                    var expenseInDb = await _expensesServices.GetExpense(user.Id, id);
 
                     return View(expenseInDb ?? new Expenses());
                 }
@@ -106,7 +106,8 @@ namespace SpendSmartV2.Controllers
             if (user != null)
             {
                 //var expenseInDb = await _context.Expenses.SingleOrDefaultAsync(e => e.Id == id && e.UserId == user.Id);
-                var expenseInDb = await _unitOfWork.expensesRepository.GetAsync(user.Id, id);
+                //var expenseInDb = await _unitOfWork.expensesRepository.GetAsync(user.Id, id);
+                var expenseInDb = await _expensesServices.GetExpense(user.Id, id);
 
                 if (expenseInDb == null)
                 {
@@ -115,8 +116,10 @@ namespace SpendSmartV2.Controllers
 
                 // _context.Expenses.Remove(expenseInDb);
                 //await _context.SaveChangesAsync();
-                await _unitOfWork.expensesRepository.DeleteEntity(id);
-                await _unitOfWork.CompleteAsync();
+                //await _unitOfWork.expensesRepository.DeleteEntity(id);
+                //await _unitOfWork.CompleteAsync();
+                await _expensesServices.DeleteExpense(id);
+                await _expensesServices.Commit();
 
                 return RedirectToAction("Index");
             }
@@ -127,7 +130,7 @@ namespace SpendSmartV2.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateEditExpensesForm(Expenses model)
+        public async Task<IActionResult> CreateEditExpenseForm(Expenses model)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -138,14 +141,17 @@ namespace SpendSmartV2.Controllers
             }
 
             //var existingExpense = await _context.Expenses.SingleOrDefaultAsync(e => e.Id == model.Id && e.UserId == user.Id);
-            var existingExpense = await _unitOfWork.expensesRepository.GetAsync(user.Id, model.Id);
+            //var existingExpense = await _unitOfWork.expensesRepository.GetAsync(user.Id, model.Id);
+            var existingExpense = await _expensesServices.GetExpense(user.Id, model.Id);
 
             if (existingExpense == null)
             {
                 model.UserId = user.Id;
                 //_context.Expenses.Add(model);
-                await _unitOfWork.expensesRepository.AddEntity(model);
-                await _unitOfWork.CompleteAsync();
+                //await _unitOfWork.expensesRepository.AddEntity(model);
+                //await _unitOfWork.CompleteAsync();
+                await _expensesServices.AddExpense(model);
+                await _expensesServices.Commit();
             }
             else
             {
@@ -153,8 +159,10 @@ namespace SpendSmartV2.Controllers
                 //existingExpense.Value = model.Value;
 
                 //_context.Expenses.Update(existingExpense);
-                await _unitOfWork.expensesRepository.UpdateEntity(model);
-                await _unitOfWork.CompleteAsync();
+                //await _unitOfWork.expensesRepository.UpdateEntity(model);
+                //await _unitOfWork.CompleteAsync();
+                await _expensesServices.UpdateExpense(model);
+                await _expensesServices.Commit();
             }
 
             //await _context.SaveChangesAsync();

@@ -5,5 +5,7 @@
         IExpensesRepository expensesRepository { get; }
 
         Task CompleteAsync();
+
+        void Dispose();
     }
 }

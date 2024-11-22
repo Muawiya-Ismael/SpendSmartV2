@@ -4,7 +4,7 @@ using SpendSmartV2.Interface;
 
 namespace SpendSmartV2.Repository
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected SpendSmartDbContext _context;
         internal DbSet<T> DbSet { get; set; }
