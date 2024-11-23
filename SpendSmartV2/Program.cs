@@ -4,6 +4,7 @@ using SpendSmartV2.Interface;
 using SpendSmartV2.Repository;
 using SpendSmartV2.Data;
 using SpendSmartV2.Services.Expenses;
+using SpendSmartV2.Services.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,7 @@ builder.Services.AddDbContext<SpendSmartDbContext>(options =>options.UseSqlServe
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<SpendSmartDbContext>();
 builder.Services.AddScoped<IExpensesServices, ExpensesServices>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+builder.Services.AddScoped<IAccountServices, AccountServices>();
 
 
 var app = builder.Build();

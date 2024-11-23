@@ -4,6 +4,7 @@ using SpendSmartV2.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SpendSmartV2.Interface;
 
 namespace SpendSmartV2.Controllers
 {
@@ -11,12 +12,13 @@ namespace SpendSmartV2.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IAccountServices _accountServices;
 
-        public AccountController(UserManager<IdentityUser> userManager,
-                                      SignInManager<IdentityUser> signInManager)
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IAccountServices accountServices)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _accountServices = accountServices;
         }
 
         public IActionResult Register()
@@ -29,17 +31,19 @@ namespace SpendSmartV2.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                };
+                //var user = new IdentityUser
+                //{
+                //    UserName = model.Email,
+                //    Email = model.Email,
+                //};
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+                //var result = await _userManager.CreateAsync(user, model.Password);
+                var result = await _accountServices.Register(model);
 
                 if (result.Succeeded)
                 {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    //await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _accountServices.SignIn();
 
                     return RedirectToAction("index", "Home");
                 }
@@ -68,11 +72,12 @@ namespace SpendSmartV2.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel user)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(user.Email, user.Password, user.RememberMe, false);
+                //var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+                var result = await _accountServices.Login(model);
 
                 if (result.Succeeded)
                 {
@@ -82,12 +87,13 @@ namespace SpendSmartV2.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid Credentials");
 
             }
-            return View(user);
+            return View(model);
         }
 
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
+            //await _signInManager.SignOutAsync();
+            await _accountServices.Logout();
 
             return RedirectToAction("Login");
         }
